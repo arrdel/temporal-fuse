@@ -57,8 +57,11 @@ experiments/results/
 experiments/logs/
 *.log
 
-# Data
+# Data (raw features, videos)
 datasets/
+data/activitynet/
+data/charades/
+data/thumos14/
 *.mp4
 *.avi
 *.mov
@@ -73,13 +76,45 @@ checkpoints/
 *.tmp
 .tmp/
 .trash/
+.pytest_cache/
 
-# Baseline
-LongVLM/
+# Draw.io diagrams (editable source; PDFs in report are canonical)
+drawio/
 
-# Trash
-trash/
+# Report / paper (LaTeX source, figures, compiled PDFs)
 report/
-eval_scripts/
-experiments/
+
+# Eval results (JSON outputs from experiments)
+eval_results/
+
+# Training run logs
+runs/
+
+# Weights & Biases
+wandb/
+
+# Old / legacy code
+hierarchicalvlm/
 LongVLM/
+trash/
+experiments/
+eval_scripts/
+
+# Old top-level files no longer needed
+quick_start_evaluations.py
+train.sh
+docs/
+examples/
+configs/attention/
+configs/domain_modules/
+configs/token_merging/
+configs/training_config.yaml
+data/SETUP_DATASET_SCRATCH.sh
+data/annotations/
+data/dataloader_config.json
+data/metadata.json
+data/raw
+data/splits.json
+data/test_videos.txt
+data/train_videos.txt
+data/val_videos.txt
