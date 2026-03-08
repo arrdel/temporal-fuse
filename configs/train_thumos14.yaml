@@ -1,0 +1,54 @@
+# TemporalFusion Training Configuration - THUMOS-14 (I3D features)
+# Launch: torchrun --nproc_per_node=8 -m temporalfusion.training --config configs/train_thumos14.yaml
+# 200 train (validation split) + 212 test videos, 20 action classes
+# Real I3D features (2048-D) from Kinetics-pretrained backbone
+
+dataset: thumos14
+
+data:
+  train_dir: ./data/thumos14/i3d_features/train
+  val_dir: ./data/thumos14/i3d_features/test
+  annotations: ./data/thumos14/gt.json
+  max_frames: 2048
+
+model:
+  feature_dim: 2048
+  hidden_dim: 1024
+  num_heads: 8
+  num_layers: 6
+  ff_mult: 4
+  dropout: 0.2
+  num_hierarchy_levels: 4
+  num_classes: 20
+  vl_embed_dim: 256
+  enable_vl: false
+
+training:
+  batch_size: 4
+  epochs: 200
+  lr: 5.0e-5
+  weight_decay: 1.0e-3
+  warmup_epochs: 10
+  num_workers: 4
+  seed: 42
+  label_smoothing: 0.1
+  grad_accum_steps: 2
+
+loss:
+  lambda_tc: 1.0
+  lambda_reg: 0.5
+  lambda_cs: 0.5
+  lambda_vl: 0.0
+  collapse_tau: 0.1
+
+performance:
+  amp: 1
+  compile_model: 0
+  cudnn_benchmark: 1
+
+logging:
+  wandb_project: temporalfusion
+  log_every: 5
+  eval_every: 2
+  save_every: 20
+  output_dir: ./runs

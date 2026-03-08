@@ -1,0 +1,54 @@
+# TemporalFusion Training Configuration - 8x A6000 Optimized
+# Launch: torchrun --nproc_per_node=8 -m temporalfusion.training --config configs/train_activitynet.yaml
+# Effective batch size: 64 * 8 * 1 = 512
+# Scaled LR: 1e-4 * (512/32) = 1.6e-3
+
+dataset: activitynet
+
+data:
+  train_dir: ./data/activitynet/c3d_features/train
+  val_dir: ./data/activitynet/c3d_features/val
+  annotations: ./data/activitynet/gt.json
+  max_frames: 512
+
+model:
+  feature_dim: 2048
+  hidden_dim: 1024
+  num_heads: 8
+  num_layers: 6
+  ff_mult: 4
+  dropout: 0.1
+  num_hierarchy_levels: 4
+  num_classes: 200
+  vl_embed_dim: 256
+  enable_vl: false
+
+training:
+  batch_size: 32
+  epochs: 50
+  lr: 3.0e-4
+  weight_decay: 1.0e-4
+  warmup_epochs: 5
+  num_workers: 6
+  seed: 42
+  label_smoothing: 0.1
+  grad_accum_steps: 2
+
+loss:
+  lambda_tc: 1.0
+  lambda_reg: 0.1
+  lambda_cs: 0.5
+  lambda_vl: 0.1
+  collapse_tau: 0.1
+
+performance:
+  amp: 1
+  compile_model: 0
+  cudnn_benchmark: 1
+
+logging:
+  wandb_project: temporalfusion
+  log_every: 20
+  eval_every: 1
+  save_every: 5
+  output_dir: ./runs
