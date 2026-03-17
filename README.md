@@ -1,148 +1,184 @@
-# HierarchicalVLM: Efficient Long-Context Video Understanding
+# TemporalFusion: Temporal Contrastive Learning with Hierarchical Feature Aggregation for Video Understanding
 
 Adele Chinda, Desire Emeka, Maryam Koya, Nita Ngozi Ezekwem
 
-[![Code](https://img.shields.io/badge/💻-Code-black)](https://github.com/arrdel/hierarchical-vlm)
-[![W&B Logs](https://img.shields.io/badge/📊-Logs-orange)](https://wandb.ai/el_chindah/hierarchical-vlm)
+[![Code](https://img.shields.io/badge/💻-Code-black)](https://github.com/arrdel/temporal-fuse)
+[![W&B Logs](https://img.shields.io/badge/📊-W&B_Logs-orange)](https://wandb.ai/el_chindah1/temporalfusion)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Architecture](https://img.shields.io/badge/📐-Architecture-purple)](docs/static/images/teaser.png)
-
-## 🚀 Quick Stats
-
-| Metric | Value |
-|--------|-------|
-| **Temporal Consistency** | +28.4%  |
-| **Activity Classification** | +34.2%  |
-| **Temporal Localization** | +41.6%  |
-| **Memory Reduction** | 130x  |
-| **Model Size** | 15.2M params (298 MB)  |
-| **Training Speed** | 1,575 samples/sec  |
 
 ## Overview
 
-HierarchicalVLM addresses the fundamental challenge of understanding long video sequences efficiently. We combine **temporal contrastive learning** with **hierarchical feature aggregation** to reduce complexity from O(T²) to O(T) while maintaining strong performance on ActivityNet-1.3.
+**TemporalFusion** addresses the challenge of learning temporally consistent video representations. We combine a temporal contrastive loss, collapse prevention regularization, and cross-scale consistency within a hierarchical aggregation framework. The model operates on pre-extracted features (I3D for THUMOS-14, VGG-16 for Charades) and is evaluated on action classification and temporal consistency.
 
-**Key Innovation:** Multi-scale attention-weighted pooling that progressively compresses temporal sequences while preserving semantic content, enabling processing of 1000+ frame videos without quadratic memory requirements.
+### Key Components
 
-## Method at a Glance
+| Component | Description |
+|-----------|-------------|
+| **Temporal Contrastive Loss** | Enforces similarity between adjacent frame representations |
+| **Collapse Prevention** | Variance regularization to prevent representation degeneration |
+| **Cross-Scale Consistency** | Aligns representations across hierarchical pooling levels |
+| **Hierarchical Aggregation** | 4-level attention-weighted temporal pyramid (T → T/16) |
 
-**📐 [View Full Architecture Diagram](docs/static/images/teaser.png)**
+## Results
 
-### Phase 1️⃣: Temporal Contrastive Learning
-- Enforce similarity between consecutive frames: $\mathcal{L}_{\text{temporal}} = \sum_{i=1}^{T-1} (1 - \cos(\mathbf{h}_i, \mathbf{h}_{i+1}))$
-- Prevent collapse with variance regularization: $\mathcal{L}_{\text{reg}} = \max(0, \tau - \text{std}_{\text{batch}}(\mathbf{H}))$
+### Main Comparison — THUMOS-14 (Single-Label, 20 Classes)
 
-### Phase 2️⃣: Hierarchical Aggregation
-- Attention-weighted pooling: $\mathbf{h}^{(l)}_j = \frac{\sum_{i \in W_j} \alpha_i^{(l)} \mathbf{h}^{(l-1)}_i}{\sum_{i \in W_j} \alpha_i^{(l)}}$
-- Hierarchy: 250 → 125 → 62 → 31 → 15 → 7 → 3 → 1 frames (**130x memory reduction**)
+| Model | Params | Top-1 (%) | Top-5 (%) | TC |
+|-------|--------|-----------|-----------|------|
+| MeanPool | 0.05M | 87.74 | 98.11 | 0.806 |
+| TemporalSegment (TSN) | 2.1M | 36.32 | 66.98 | 0.806 |
+| DirectTransformer | 77.7M | 90.09 | 97.64 | 0.999 |
+| **TemporalFusion (Ours)** | **77.9M** | **89.62** | **98.11** | **0.989** |
 
-### Phase 3️⃣: Vision-Language Alignment (Optional)
-- Align visual and textual embeddings for multimodal learning
+### Main Comparison — Charades (Multi-Label, 157 Classes)
 
-## 📊 Results
+| Model | Params | mAP (%) | TC |
+|-------|--------|---------|----|
+| MeanPool | 0.7M | 14.28 | 0.671 |
+| TemporalSegment (TSN) | 8.7M | 14.66 | 0.671 |
+| DirectTransformer | 79.9M | 17.63 | 0.999 |
+| **TemporalFusion (Ours)** | **79.9M** | **16.72** | **0.999** |
 
-| Baseline | Temporal Consistency | Activity Classification | Localization (IoU@0.5) |
-|----------|---------------------|-------------------------|----------------------|
-| Direct Transformer | 0.582 | 0.672 | 0.514 |
-| TSN | 0.598 | 0.681 | 0.527 |
-| MoCo v2 | 0.642 | 0.715 | 0.589 |
-| VideoClip | 0.691 | 0.758 | 0.627 |
-| **HierarchicalVLM** | **0.747** ✓ | **0.841** ✓ | **0.728** ✓ |
+### Ablation Study — THUMOS-14
 
-### Ablation Study
-| Component | Temporal Consistency | Classification |
-|-----------|---------------------|-----------------|
-| Baseline | 0.582 | 0.672 |
-| + Temporal Contrastive | 0.724 (+14.2%) | 0.801 (+19.2%) |
-| + Collapse Prevention | 0.731 (+0.7%) | 0.812 (+1.4%) |
-| + Hierarchical Aggregation | 0.745 (+1.4%) | 0.823 (+1.4%) |
-| + Vision-Language | **0.747** (+0.2%) | **0.841** (+2.2%) |
+| Variant | Top-1 (%) | TC |
+|---------|-----------|------|
+| Full Model | 87.74 | 0.989 |
+| w/o Temporal Contrastive | 92.92 | 0.862 |
+| w/o Collapse Prevention | 91.04 | 0.989 |
+| w/o Cross-Scale | 90.57 | 0.999 |
+| Classification Only | 88.68 | 0.955 |
 
-## 📁 Project Structure
+### Ablation Study — Charades
+
+| Variant | mAP (%) | TC |
+|---------|---------|------|
+| Full Model | 16.03 | 0.999 |
+| w/o Temporal Contrastive | 17.25 | 0.947 |
+| w/o Collapse Prevention | 16.83 | 0.999 |
+| w/o Cross-Scale | 13.11 | 1.000 |
+| Classification Only | 13.04 | 0.982 |
+
+## Architecture
 
 ```
-hierarchicalvlm/              # Core implementation
-├── model/                    # Model architecture
-├── train/                    # Training scripts
-├── eval/                     # Evaluation code
-└── utils/                    # Utilities
-
-quantitative_evaluation/      # Benchmarking
-configs/                      # Configuration files
-datasets/anet/                # ActivityNet-1.3
-docs/                         # Documentation & project page
+Video Features (B, T, D)
+    │
+    ▼
+Feature Projection (Linear + LN + GELU)
+    │  + Sinusoidal Positional Encoding
+    ▼
+Transformer Encoder (6L × 8H, Pre-LN)
+    │  ← L_tc (Temporal Contrastive) + L_reg (Collapse Prevention)
+    ▼
+Hierarchical Aggregation (4 levels, attention-weighted pairs)
+    │  ← L_cs (Cross-Scale Consistency)
+    ▼
+Classifier (LN → Linear → C classes)
+       ← L_cls (Cross-Entropy / BCE)
 ```
 
-## 📈 Dataset: ActivityNet-1.3
+## Project Structure
 
-- **13,459 videos** (9,032 train, 4,427 val) with 13,929 action annotations
-- **200 activity classes** across diverse domains
-- **2048-D C3D features** at 1 FPS (avg. 250 frames/video)
+```
+temporalfusion/             # Core package
+├── model.py               # TemporalFusion model architecture
+├── losses.py              # Loss functions (temporal, collapse, cross-scale)
+├── data.py                # Dataset loaders (THUMOS-14, Charades)
+├── training.py            # Training loop with DDP support
+├── train.py               # Training entry point
+├── evaluate.py            # Evaluation metrics (accuracy, mAP, TC)
+├── baselines.py           # Baseline models (MeanPool, TSN, DirectTransformer)
+├── train_baselines.py     # Baseline training script
+├── run_ablations.py       # Ablation study runner
+└── utils.py               # Utilities
 
+configs/                    # Training configurations
+├── train_thumos14.yaml    # THUMOS-14 config
+├── train_charades.yaml    # Charades config
+└── train_activitynet.yaml # ActivityNet config
 
+scripts/                    # Experiment scripts
+├── run_experiments.sh     # Full experiment pipeline
+├── run_baselines.py       # Run all baselines
+├── run_ablation_study.sh  # Run ablation study
+├── eval_ablations.py      # Evaluate ablation results
+├── generate_paper_figures.py
+└── generate_improved_figures.py
 
-## ⚡ Installation & Quick Start
+tests/
+└── test_temporalfusion.py # Unit tests
+```
 
-### Setup (5 minutes)
+## Installation
+
 ```bash
-# Clone and setup
-git clone https://github.com/arrdel/hierarchical-vlm.git
-cd HierarchicalVLM
+# Clone
+git clone https://github.com/arrdel/temporal-fuse.git
+cd temporal-fuse
 
 # Create environment
-python3 -m venv venv
-source venv/bin/activate
+conda create -n temporalfusion python=3.10 -y
+conda activate temporalfusion
 
-# Install
+# Install dependencies
 pip install -r requirements.txt
+pip install -e .
 ```
 
-### Training
+## Training
+
 ```bash
-# Single GPU
-python hierarchicalvlm/train/train.py \
-  --config configs/train_config.yaml \
-  --data_path datasets/anet/
+# Single GPU — THUMOS-14
+python -m temporalfusion.train --config configs/train_thumos14.yaml
 
-# Multi-GPU (2x RTX 4090)
-torchrun --nproc_per_node=2 hierarchicalvlm/train/train.py \
-  --config configs/train_config.yaml \
-  --data_path datasets/anet/
+# 8-GPU DDP — THUMOS-14
+torchrun --nproc_per_node=8 -m temporalfusion.train \
+    --config configs/train_thumos14.yaml
+
+# 8-GPU DDP — Charades
+torchrun --nproc_per_node=8 -m temporalfusion.train \
+    --config configs/train_charades.yaml
 ```
 
-### Evaluation
+### Baselines & Ablations
+
 ```bash
-# Benchmark evaluation
-bash quantitative_evaluation/evaluate_benchmark.sh \
-  --model_path checkpoint.pt \
-  --data_path datasets/anet/
+# Run all baselines on both datasets
+python scripts/run_baselines.py
+
+# Run full ablation study
+bash scripts/run_ablation_study.sh
 ```
 
+## Evaluation
 
-## 📚 References
+```bash
+# Evaluate a trained model
+python -m temporalfusion.evaluate \
+    --checkpoint runs/<run_dir>/best_model.pt \
+    --config configs/train_thumos14.yaml
 
-This work builds on:
-- **Video Understanding:** C3D, TSN, VideoClip
-- **Temporal Learning:** MoCo, SimCLR, Temporal Contrastive Learning
-- **Efficient Transformers:** Performer, Mamba, Linear Attention
+# Evaluate ablation results
+python scripts/eval_ablations.py
+```
 
-<!-- ## 📖 Citation 
+## Hardware
 
-```bibtex
-@article{chinda2024hierarchicalvlm,
-  title={HierarchicalVLM: Efficient Long-Context Video Understanding via Hierarchical Temporal Aggregation},
-  author={Chinda, Adele and Azumah, Richmond and Venkateswara, Hemanth Demakethepalli},
-  journal={arXiv preprint arXiv:2412.xxxxx},
-  year={2024}
+All experiments were conducted on **8× NVIDIA RTX A6000** (48 GB each) using PyTorch DDP with mixed precision (AMP). Total compute: ~60 GPU-hours.
+
+## Citation
+
+<!-- ```bibtex
+@inproceedings{chinda2026temporalfusion,
+  title={TemporalFusion: Temporal Contrastive Learning with Hierarchical 
+         Feature Aggregation for Video Understanding},
+  author={Chinda, Adele and Emeka, Desire and Koya, Maryam and Ezekwem, Nita Ngozi},
+  booktitle={Proceedings of the British Machine Vision Conference (BMVC)},
+  year={2026}
 }
 ``` -->
 
+## License
 
-## 📄 License
-
-MIT License - See [LICENSE](LICENSE) for details.
-
----
-
-
-
+MIT License — See [LICENSE](LICENSE) for details.
