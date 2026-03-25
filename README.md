@@ -59,56 +59,6 @@ Adele Chinda, Desire Emeka, Maryam Koya, Nita Ngozi Ezekwem
 | w/o Cross-Scale | 13.11 | 1.000 |
 | Classification Only | 13.04 | 0.982 |
 
-## Architecture
-
-```
-Video Features (B, T, D)
-    │
-    ▼
-Feature Projection (Linear + LN + GELU)
-    │  + Sinusoidal Positional Encoding
-    ▼
-Transformer Encoder (6L × 8H, Pre-LN)
-    │  ← L_tc (Temporal Contrastive) + L_reg (Collapse Prevention)
-    ▼
-Hierarchical Aggregation (4 levels, attention-weighted pairs)
-    │  ← L_cs (Cross-Scale Consistency)
-    ▼
-Classifier (LN → Linear → C classes)
-       ← L_cls (Cross-Entropy / BCE)
-```
-
-## Project Structure
-
-```
-temporalfusion/             # Core package
-├── model.py               # TemporalFusion model architecture
-├── losses.py              # Loss functions (temporal, collapse, cross-scale)
-├── data.py                # Dataset loaders (THUMOS-14, Charades)
-├── training.py            # Training loop with DDP support
-├── train.py               # Training entry point
-├── evaluate.py            # Evaluation metrics (accuracy, mAP, TC)
-├── baselines.py           # Baseline models (MeanPool, TSN, DirectTransformer)
-├── train_baselines.py     # Baseline training script
-├── run_ablations.py       # Ablation study runner
-└── utils.py               # Utilities
-
-configs/                    # Training configurations
-├── train_thumos14.yaml    # THUMOS-14 config
-├── train_charades.yaml    # Charades config
-└── train_activitynet.yaml # ActivityNet config
-
-scripts/                    # Experiment scripts
-├── run_experiments.sh     # Full experiment pipeline
-├── run_baselines.py       # Run all baselines
-├── run_ablation_study.sh  # Run ablation study
-├── eval_ablations.py      # Evaluate ablation results
-├── generate_paper_figures.py
-└── generate_improved_figures.py
-
-tests/
-└── test_temporalfusion.py # Unit tests
-```
 
 ## Installation
 
@@ -166,18 +116,6 @@ python scripts/eval_ablations.py
 ## Hardware
 
 All experiments were conducted on **8× NVIDIA RTX A6000** (48 GB each) using PyTorch DDP with mixed precision (AMP). Total compute: ~60 GPU-hours.
-
-## Citation
-
-<!-- ```bibtex
-@inproceedings{chinda2026temporalfusion,
-  title={TemporalFusion: Temporal Contrastive Learning with Hierarchical 
-         Feature Aggregation for Video Understanding},
-  author={Chinda, Adele and Emeka, Desire and Koya, Maryam and Ezekwem, Nita Ngozi},
-  booktitle={Proceedings of the British Machine Vision Conference (BMVC)},
-  year={2026}
-}
-``` -->
 
 ## License
 
